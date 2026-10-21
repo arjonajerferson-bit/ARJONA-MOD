@@ -1,0 +1,261 @@
+-- ====================================================================
+-- SCRIPT DUELS: ASESINOS VS SHERIFF (CON BOTÓN X Y +)
+-- VERSION: 21 DE OCTUBRE, 2026
+-- ====================================================================
+
+-- 1. CREACIÓN DE LA INTERFAZ BASE (GUI)
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local CloseButton = Instance.new("TextButton") -- El botón "X"
+local OpenButton = Instance.new("TextButton")  -- El botón "+"
+local VersionLabel = Instance.new("TextLabel")
+local ScrollingFrame = Instance.new("ScrollingFrame")
+local UIListLayout = Instance.new("UIListLayout")
+
+ScreenGui.Name = "DuelsHubV3"
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ResetOnSpawn = false
+
+-- CONFIGURACIÓN DEL MENÚ PRINCIPAL
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.Position = UDim2.new(0.3, 0, 0.2, 0)
+MainFrame.Size = UDim2.new(0, 350, 0, 480)
+MainFrame.Active = true
+MainFrame.Draggable = true -- Se puede arrastrar con el mouse
+
+Title.Name = "Title"
+Title.Parent = MainFrame
+Title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Font = Enum.Font.SourceSansBold
+Title.Text = "DUELS HUB - ASSASINS VS SHERIFF"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.TextSize = 18
+
+-- BOTÓN "X" PARA MINIMIZAR / OCULTAR EL MENÚ
+CloseButton.Name = "CloseButton"
+CloseButton.Parent = MainFrame
+CloseButton.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+CloseButton.Position = UDim2.new(1, -35, 0, 5)
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Font = Enum.Font.SourceSansBold
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextSize = 18
+
+-- BOTÓN "+" FLOTANTE PARA VOLVER A ENTRAR / MOSTRAR
+OpenButton.Name = "OpenButton"
+OpenButton.Parent = ScreenGui
+OpenButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+OpenButton.Position = UDim2.new(0.05, 0, 0.4, 0) -- Aparece al lado izquierdo de la pantalla
+OpenButton.Size = UDim2.new(0, 45, 0, 45)
+OpenButton.Font = Enum.Font.SourceSansBold
+OpenButton.Text = "+"
+OpenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenButton.TextSize = 24
+OpenButton.Visible = false -- Oculto al inicio hasta que uses la X
+OpenButton.Active = true
+OpenButton.Draggable = true -- También puedes mover el botón "+" a donde quieras
+
+-- FUNCIONES DE LOS BOTONES X Y +
+CloseButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    OpenButton.Visible = true -- Muestra el botón + para volver a entrar
+end)
+
+OpenButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = true
+    OpenButton.Visible = false -- Oculta el botón + mientras el menú está abierto
+end)
+
+VersionLabel.Name = "VersionLabel"
+VersionLabel.Parent = MainFrame
+VersionLabel.BackgroundTransparency = 1
+VersionLabel.Position = UDim2.new(0, 10, 0, 42)
+VersionLabel.Size = UDim2.new(1, -20, 0, 20)
+VersionLabel.Font = Enum.Font.SourceSansItalic
+VersionLabel.Text = "Versión: 21 de Octubre, 2026"
+VersionLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+VersionLabel.TextSize = 14
+VersionLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+ScrollingFrame.Parent = MainFrame
+ScrollingFrame.BackgroundTransparency = 1
+ScrollingFrame.Position = UDim2.new(0, 10, 0, 65)
+ScrollingFrame.Size = UDim2.new(1, -20, 0, 400)
+ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 700)
+ScrollingFrame.ScrollBarThickness = 6
+
+UIListLayout.Parent = ScrollingFrame
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 8)
+
+-- Función auxiliar para crear separadores
+local function crearSeccion(texto)
+    local label = Instance.new("TextLabel")
+    label.Parent = ScrollingFrame
+    label.BackgroundTransparency = 1
+    label.Size = UDim2.new(1, 0, 0, 25)
+    label.Font = Enum.Font.SourceSansBold
+    label.Text = "--- " .. string.upper(texto) .. " ---"
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextSize = 16
+    return label
+end
+
+-- Función auxiliar para crear botones activos
+local function crearBoton(texto, callback)
+    local boton = Instance.new("TextButton")
+    local activado = false
+    boton.Parent = ScrollingFrame
+    boton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    boton.Size = UDim2.new(1, 0, 0, 35)
+    boton.Font = Enum.Font.SourceSans
+    boton.Text = texto .. ": [OFF]"
+    boton.TextColor3 = Color3.fromRGB(200, 200, 200)
+    boton.TextSize = 15
+    
+    boton.MouseButton1Click:Connect(function()
+        activado = not activado
+        if activado then
+            boton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+            boton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            boton.Text = texto .. ": [ON]"
+        else
+            boton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+            boton.TextColor3 = Color3.fromRGB(200, 200, 200)
+            boton.Text = texto .. ": [OFF]"
+        end
+        callback(activado)
+    end)
+    return boton
+end
+
+local LocalPlayer = game.Players.LocalPlayer
+
+-- ====================================================================
+-- SECCIÓN 1: AIMBOT & COMBAT
+-- ====================================================================
+crearSeccion("Aimbot & Combate")
+
+local SilentAimbotEnabled = false
+local KillAuraEnabled = false
+local AimPart = "Head"
+local KillAuraRange = 25
+
+crearBoton("Aimbot Silent", function(estado)
+    SilentAimbotEnabled = estado
+end)
+
+local BotonParte = Instance.new("TextButton")
+BotonParte.Parent = ScrollingFrame
+BotonParte.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+BotonParte.Size = UDim2.new(1, 0, 0, 35)
+BotonParte.Font = Enum.Font.SourceSans
+BotonParte.Text = "Aimbot Objetivo: CABEZA"
+BotonParte.TextColor3 = Color3.fromRGB(255, 255, 255)
+BotonParte.TextSize = 15
+
+BotonParte.MouseButton1Click:Connect(function()
+    if AimPart == "Head" then
+        AimPart = "UpperTorso"
+        BotonParte.Text = "Aimbot Objetivo: PECHO"
+    else
+        AimPart = "Head"
+        BotonParte.Text = "Aimbot Objetivo: CABEZA"
+    end
+end)
+
+crearBoton("Kill Aura", function(estado)
+    KillAuraEnabled = estado
+end)
+
+spawn(function()
+    while wait(0.1) do
+        if KillAuraEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local miPos = LocalPlayer.Character.HumanoidRootPart.Position
+            for _, enemigo in pairs(game.Players:GetPlayers()) do
+                if enemigo ~= LocalPlayer and enemigo.Character and enemigo.Character:FindFirstChild("HumanoidRootPart") and enemigo.Character:FindFirstChild("Humanoid") then
+                    local herido = enemigo.Character.Humanoid
+                    if herido.Health > 0 then
+                        local enePos = enemigo.Character.HumanoidRootPart.Position
+                        local distancia = (miPos - enePos).Magnitude
+                        if distancia <= KillAuraRange then
+                            local arma = LocalPlayer.Character:FindFirstChildOfClass("Tool")
+                            if arma then
+                                arma:Activate()
+                                pcall(function()
+                                    if arma:FindFirstChild("Remote") then
+                                        arma.Remote:FireServer(enemigo.Character)
+                                    elseif arma:FindFirstChild("Hit") then
+                                        arma.Hit:FireServer(enemigo.Character.HumanoidRootPart)
+                                    end
+                                end)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+local Mouse = LocalPlayer:GetMouse()
+local function obtenerJugadorMasCercano()
+    local maxDistancia = math.huge
+    local objetivo = nil
+    for _, v in pairs(game.Players:GetPlayers()) do
+        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild(AimPart) and v.Character:FindFirstChild("HumanoidRootPart") then
+            local pos, enPantalla = game.Workspace.CurrentCamera:WorldToViewportPoint(v.Character[AimPart].Position)
+            if enPantalla then
+                local magnitud = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(pos.X, pos.Y)).Magnitude
+                if magnitud < maxDistancia and magnitud < 200 then
+                    maxDistancia = magnitud
+                    objetivo = v
+                end
+            end
+        end
+    end
+    return objetivo
+end
+
+local mt = getrawmetatable(game)
+local oldNamecall = mt.__namecall
+setreadonly(mt, false)
+mt.__namecall = newcclosure(function(self, ...)
+    local method = getnamecallmethod()
+    local args = {...}
+    if method == "FireServer" and SilentAimbotEnabled then
+        local target = obtenerJugadorMasCercano()
+        if target and target.Character and target.Character:FindFirstChild(AimPart) then
+            if args and typeof(args) == "Vector3" then
+                args = target.Character[AimPart].Position
+                return oldNamecall(self, unpack(args))
+            end
+        end
+    end
+    return oldNamecall(self, ...)
+end)
+setreadonly(mt, true)
+
+-- ====================================================================
+-- SECCIÓN 2: ESP
+-- ====================================================================
+crearSeccion("ESP")
+
+local EspNombres = false
+local EspLineas = false
+local EspKilometros = false
+
+crearBoton("ESP Nombre", function(estado) EspNombres = estado end)
+crearBoton("ESP Linea", function(estado) EspLineas = estado end)
+crearBoton("ESP Kilometros", function(estado) EspKilometros = estado end)
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = p.Character.HumanoidRootPart
+
